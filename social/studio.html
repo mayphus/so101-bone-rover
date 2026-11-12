@@ -1,0 +1,147 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Bone Rover render studio</title>
+<style>html,body{margin:0;background:#111;color:#ccc;font:13px system-ui}#c{display:block;max-width:100vw;max-height:92vh;margin:auto}#s{padding:6px 10px}</style>
+<div id="s">loading…</div>
+<canvas id="c"></canvas>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import {STLLoader} from "three/addons/loaders/STLLoader.js";
+import {RoomEnvironment} from "three/addons/environments/RoomEnvironment.js";
+import {toCreasedNormals} from "three/addons/utils/BufferGeometryUtils.js";
+
+const status = t => (document.getElementById("s").textContent = t);
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({canvas, antialias: true, preserveDrawingBuffer: true});
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+const camera = new THREE.PerspectiveCamera(28, 1, 5, 20000);
+camera.up.set(0, 0, 1);
+
+// ---------- lights ----------
+const key = new THREE.DirectionalLight(0xffffff, 2.6);
+key.castShadow = true; key.shadow.mapSize.set(4096, 4096); key.shadow.bias = -0.0002; key.shadow.normalBias = 0.6; key.shadow.radius = 6;
+Object.assign(key.shadow.camera, {left: -500, right: 500, top: 500, bottom: -500, near: 10, far: 3000});
+scene.add(key, key.target);
+const rim = new THREE.DirectionalLight(0xffffff, 1.4); scene.add(rim);
+const fill = new THREE.HemisphereLight(0xffffff, 0x404040, 0.35); scene.add(fill);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000), new THREE.ShadowMaterial({opacity: 0.32}));
+ground.receiveShadow = true; scene.add(ground);
+
+// ---------- materials ----------
+const M = {
+  frame: new THREE.MeshPhysicalMaterial({color: 0xece8e1, roughness: 0.48, clearcoat: 0.35, clearcoatRoughness: 0.4, sheen: 0.3}),
+  frameOrange: new THREE.MeshPhysicalMaterial({color: 0xff6a1a, roughness: 0.42, clearcoat: 0.5, clearcoatRoughness: 0.3}),
+  arm: new THREE.MeshPhysicalMaterial({color: 0xf2b928, roughness: 0.45, clearcoat: 0.3}),
+  servo: new THREE.MeshStandardMaterial({color: 0x16181b, roughness: 0.5, metalness: 0.1}),
+  metal: new THREE.MeshStandardMaterial({color: 0xc8ccd1, roughness: 0.28, metalness: 0.95}),
+  can: new THREE.MeshStandardMaterial({color: 0xb5bac0, roughness: 0.35, metalness: 0.9}),
+  pcbGreen: new THREE.MeshStandardMaterial({color: 0x1f7a44, roughness: 0.5}),
+  pcbBlue: new THREE.MeshStandardMaterial({color: 0x1e5aa8, roughness: 0.5}),
+  white: new THREE.MeshStandardMaterial({color: 0xf2f2ee, roughness: 0.6}),
+  rubber: new THREE.MeshStandardMaterial({color: 0x1a1c1e, roughness: 0.92}),
+  hub: new THREE.MeshStandardMaterial({color: 0x3a4148, roughness: 0.5, metalness: 0.3}),
+  battery: new THREE.MeshStandardMaterial({color: 0x2c3e55, roughness: 0.65}),
+  carbon: new THREE.MeshStandardMaterial({color: 0x15171a, roughness: 0.35, metalness: 0.2}),
+  mount: new THREE.MeshPhysicalMaterial({color: 0xe0582a, roughness: 0.45, clearcoat: 0.3}),
+  caster: new THREE.MeshStandardMaterial({color: 0x8a9298, roughness: 0.35, metalness: 0.8}),
+  stress: new THREE.MeshStandardMaterial({vertexColors: true, roughness: 0.5}),
+};
+const PARTS = [
+  ["stl/print/assembly/frame_rear.stl", "frame", "frame", [-0.5, 0, 0.55]],
+  ["stl/print/assembly/frame_front.stl", "frame", "frame", [1.1, 0, 0.45]],
+  ["stl/print/assembly/frame_pod_left.stl", "frame", "frame", [0, 1.1, 0.3]],
+  ["stl/print/assembly/frame_pod_right.stl", "frame", "frame", [0, -1.1, 0.3]],
+  ["stl/assembly/_ref_gearbox.stl", "metal", "drive", [0, 0, -0.1]],
+  ["stl/assembly/_ref_motor.stl", "can", "drive", [0, 0, -0.1]],
+  ["stl/assembly/_ref_encoder.stl", "pcbGreen", "drive", [0, 0, -0.1]],
+  ["stl/assembly/_ref_plug.stl", "white", "drive", [0, 0, -0.1]],
+  ["stl/assembly/_ref_tire.stl", "rubber", "wheels", [0, 1.9, -0.1]],
+  ["stl/assembly/_ref_wheelhub.stl", "hub", "wheels", [0, 1.9, -0.1]],
+  ["stl/assembly/_ref_caster_fork.stl", "caster", "wheels", [1.3, 0, -0.9]],
+  ["stl/assembly/_ref_caster_wheel.stl", "rubber", "wheels", [1.3, 0, -0.9]],
+  ["stl/assembly/_ref_battery.stl", "battery", "elec", [0, 0, -1.5]],
+  ["stl/assembly/_ref_driver.stl", "pcbBlue", "elec", [0.6, 0, 1.3]],
+  ["stl/assembly/_ref_pi5.stl", "pcbGreen", "elec", [0.6, 0, 1.8]],
+  ["stl/assembly/_ref_mast.stl", "carbon", "mast", [-1.2, 0, 1.0]],
+  ["stl/assembly/camera_head.stl", "frame", "mast", [-1.2, 0, 1.2]],
+  ["stl/assembly/_ref_camera.stl", "carbon", "mast", [-1.2, 0, 1.3]],
+  ["stl/assembly/_arm_printed.stl", "arm", "arm", [0, 0, 2.2]],
+  ["stl/assembly/_arm_servos.stl", "servo", "arm", [0, 0, 2.2]],
+  ["stl/assembly/_arm_wristmount.stl", "mount", "arm", [0, 0, 2.2]],
+  ["stl/assembly/_arm_wristcam.stl", "carbon", "arm", [0, 0, 2.2]],
+];
+const meshes = [];
+const loader = new STLLoader();
+async function loadAll() {
+  let n = 0;
+  for (const [url, mat, group, dir] of PARTS) {
+    const geo = await new Promise((ok, fail) => loader.load("../" + url, ok, undefined, fail));
+    const g = toCreasedNormals(geo, Math.PI / 6);
+    const m = new THREE.Mesh(g, M[mat]);
+    m.castShadow = m.receiveShadow = true;
+    m.userData = {group, dir: new THREE.Vector3(...dir), mat, name: url.split("/").pop()};
+    scene.add(m); meshes.push(m);
+    status(`loaded ${++n}/${PARTS.length}`);
+  }
+  // stress-coloured frame (FEA envelope, relative to the frame's own peak), from the web export
+  const RAMP = [[0.16, 0.33, 0.75], [0.15, 0.62, 0.72], [0.55, 0.78, 0.35], [0.98, 0.78, 0.2], [0.93, 0.35, 0.15]];
+  const ramp = t => { t = Math.min(Math.max(t, 0), 1) * 4; const i = Math.min(Math.floor(t), 3), f = t - i; return RAMP[i].map((a, k) => a + (RAMP[i + 1][k] - a) * f); };
+  for (const p of ["frame_rear", "frame_front", "frame_pod_left", "frame_pod_right"]) {
+    const d = await (await fetch(`../web/print/assembly/${p}.json`)).json();
+    const s = await (await fetch(`../web/print/assembly/${p}_stress.json`)).json();
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(d.v.map(x => x * d.s)), 3));
+    const col = new Float32Array(s.c.length * 3); s.c.forEach((v, k) => col.set(ramp(Math.pow(v, 0.5)), 3 * k));
+    g.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    g.setIndex(new THREE.BufferAttribute(new Uint32Array(d.i), 1));
+    const m = new THREE.Mesh(toCreasedNormals(g, Math.PI / 6), M.stress);
+    m.castShadow = m.receiveShadow = true; m.visible = false;
+    m.userData = {group: "stress", dir: new THREE.Vector3(), mat: "stress"};
+    scene.add(m); meshes.push(m);
+  }
+  status("ready");
+}
+
+function background(top, bottom, glow) {
+  const c = document.createElement("canvas"); c.width = 16; c.height = 512;
+  const x = c.getContext("2d"); const gr = x.createLinearGradient(0, 0, 0, 512);
+  gr.addColorStop(0, top); gr.addColorStop(glow ?? 0.62, bottom); gr.addColorStop(1, top); x.fillStyle = gr; x.fillRect(0, 0, 16, 512);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+// shot = {w, h, groups, frameMat, explode, cam:[x,y,z], target:[x,y,z], fov, bg:[top,bottom], exposure, shadow, keyPos, rimPos, rimColor}
+window.renderShot = async function (name, shot) {
+  const show = new Set(shot.groups);
+  for (const m of meshes) {
+    m.visible = show.has(m.userData.group);
+    if (m.userData.group === "frame") m.material = M[shot.frameMat || "frame"];
+    if (m.userData.mat === "frame" && m.userData.group === "mast") m.material = M[shot.frameMat || "frame"];
+    m.position.copy(m.userData.dir).multiplyScalar(shot.explode || 0);
+  }
+  scene.background = background(...shot.bg);
+  ground.material.opacity = shot.shadow ?? 0.32;
+  renderer.toneMappingExposure = shot.exposure ?? 1.0;
+  scene.environmentIntensity = shot.env ?? 1.0;
+  key.position.set(...(shot.keyPos || [350, -450, 900])); key.target.position.set(...shot.target);
+  rim.position.set(...(shot.rimPos || [-700, 500, 350])); rim.color.set(shot.rimColor || 0xffffff); rim.intensity = shot.rim ?? 1.4;
+  const S = 2;                                   // supersample, then downscale for clean edges
+  renderer.setPixelRatio(1); renderer.setSize(shot.w * S, shot.h * S, false);
+  camera.aspect = shot.w / shot.h; camera.fov = shot.fov || 28;
+  camera.position.set(...shot.cam); camera.lookAt(...shot.target); camera.updateProjectionMatrix();
+  renderer.render(scene, camera);
+  const out = document.createElement("canvas"); out.width = shot.w; out.height = shot.h;
+  const ctx = out.getContext("2d"); ctx.imageSmoothingQuality = "high"; ctx.drawImage(canvas, 0, 0, shot.w, shot.h);
+  const blob = await new Promise(r => out.toBlob(r, "image/png"));
+  const res = await fetch(`/save/${name}.png`, {method: "POST", body: blob});
+  return `${name}: ${res.status} ${(blob.size / 1e6).toFixed(2)} MB`;
+};
+await loadAll();
+window.ready = true;
+</script>
