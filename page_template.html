@@ -1,0 +1,322 @@
+<title>SO-101 Bone Rover</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,600;112,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-bleed 3D viewer as the thesis, then a two-column spec sheet that stacks on phones. */
+:root {
+  --bg: #eef0f1; --panel: #ffffff; --fg: #1b2226; --muted: #5d6970; --line: #d5dadd;
+  --accent: #e8661c; --accent-ink: #ffffff; --stage: #e3e6e8; --ok: #2f8f5b; --warn: #b7791f;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161a; --panel: #1a2026; --fg: #e6eaec; --muted: #94a1a8; --line: #2b343b;
+  --accent: #f07a33; --accent-ink: #1a0d05; --stage: #161c21; --ok: #57c08a; --warn: #e0a84a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12161a; --panel: #1a2026; --fg: #e6eaec; --muted: #94a1a8; --line: #2b343b;
+  --accent: #f07a33; --accent-ink: #1a0d05; --stage: #161c21; --ok: #57c08a; --warn: #e0a84a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font: 15px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 56px }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 28px }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px }
+h1 { font: 800 clamp(30px, 5vw, 52px)/1 var(--display); font-stretch: 112%; letter-spacing: -0.02em; margin: 0; text-wrap: balance }
+h1 span { color: var(--accent) }
+.sub { color: var(--muted); max-width: 60ch; margin: 8px 0 0 }
+.tag { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted) }
+.stage { position: relative; background: var(--stage); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; height: min(68vh, 620px); min-height: 360px }
+#view { position: absolute; inset: 0; width: 100%; height: 100% }
+.hud { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none }
+.hud > * { pointer-events: auto }
+.chip { font: 500 13px/1 var(--body); padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer }
+.chip[aria-pressed="false"] { opacity: .5 }
+.chip:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.slider { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font: 500 13px var(--body) }
+.slider input { width: 120px; accent-color: var(--accent) }
+.stresslegend { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; font: 12px var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px }
+.stresslegend[hidden] { display: none }
+.stresslegend i { width: 120px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #2a54bf, #279eb8, #8cc759, #fac733, #ed5926) }
+.loading { position: absolute; top: 12px; left: 12px; font: 12px var(--mono); color: var(--muted) }
+.legend { position: absolute; top: 12px; right: 12px; font: 12px/1.7 var(--mono); color: var(--muted); text-align: right }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-left: 6px; vertical-align: middle }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr } }
+section { min-width: 0 }
+h2 { font: 600 20px/1.2 var(--display); font-stretch: 112%; margin: 0 0 12px; text-wrap: balance }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden }
+.stat { background: var(--panel); padding: 14px 16px }
+.stat b { display: block; font: 600 22px/1.2 var(--mono); font-variant-numeric: tabular-nums }
+.stat span { font-size: 13px; color: var(--muted) }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel) }
+table { border-collapse: collapse; width: 100%; font-size: 14px }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted) }
+tr:last-child td { border-bottom: 0 }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap }
+.pill { font: 500 11px var(--mono); padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap }
+.pill.ok { color: var(--ok) } .pill.warn { color: var(--warn) }
+ol, ul { margin: 0; padding-left: 20px; display: grid; gap: 6px }
+.note { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--muted) }
+code { font: 13px var(--mono); background: var(--stage); padding: 1px 5px; border-radius: 4px }
+.variants { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px }
+.var { text-align: left; font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; cursor: pointer; display: grid; gap: 4px }
+.var[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent) }
+.var b { font: 600 15px var(--display); font-stretch: 112% }
+.var .why { font-size: 13px; color: var(--muted) }
+.var dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 6px 0 0; font: 13px var(--mono); font-variant-numeric: tabular-nums }
+.var dt { color: var(--muted) } .var dd { margin: 0 }
+.loads { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px }
+.load { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px }
+.load b { font: 600 14px var(--body) } .load p { margin: 4px 0 0; font-size: 13px; color: var(--muted) }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="tag">SO-101 mobile base · 2 × JGB37-520 rear drive + swivel caster · Bambu A1 mini</div>
+      <h1>Bone <span>Rover</span></h1>
+      <p class="sub">A generative-design frame for the SO-101 arm, shown with the official SO-101 model on top. Two encoder motors drive 100 mm wheels at the back, and one rubber swivel caster carries the nose, so the base rolls on pavement and short grass. The frame also holds the battery, a Waveshare driver board and an overview camera on a mast. Every strut grew where a load runs from the arm down to the wheels. It prints as 4 pieces, joined where a strut crosses a cut: the strut swells into a rounded knuckle with M3 screws inside, grown in the same field as the rest of the bone.</p>
+    </div>
+  </header>
+
+  <div class="stage">
+    <canvas id="view" aria-label="3D model of the rover base"></canvas>
+    <div class="loading" id="loading">Loading parts…</div>
+    <div class="stresslegend" id="stresslegend" hidden><span>low</span><i></i><span>peak stress</span></div>
+    <div class="legend">
+      printed frame<i style="background:#cfd3d6"></i><br>JGB37-520 + encoder<i style="background:#e8661c"></i><br>100 mm wheel, 2" caster<i style="background:#3d4a52"></i><br>battery, driver, Pi<i style="background:#7fa6c9"></i><br>SO-101 (official model)<i style="background:#f2c14e"></i><br>wrist camera mount<i style="background:#e05a2a"></i>
+    </div>
+    <div class="hud">
+      <button class="chip" id="t-chassis" aria-pressed="true">Frame</button>
+      <button class="chip" id="t-drive" aria-pressed="true">Motors</button>
+      <button class="chip" id="t-casters" aria-pressed="true">Wheels, caster</button>
+      <button class="chip" id="t-proxy" aria-pressed="true">Battery, electronics</button>
+      <button class="chip" id="t-cam" aria-pressed="true">Camera mast</button>
+      <button class="chip" id="t-arm" aria-pressed="true">SO-101</button>
+      <button class="chip" id="t-stress" aria-pressed="false">Stress view</button>
+      <label class="slider" for="explode">Explode <input id="explode" type="range" min="0" max="1" step="0.01" value="0"></label>
+      <button class="chip" id="spin" aria-pressed="true">Auto-rotate</button>
+    </div>
+  </div>
+
+  <section>
+    <h2>Pick a variant</h2>
+    <div class="variants" id="variants"></div>
+    <p class="sub">Same keep-outs, mounting features and loads for both, and both use the 45° overhang rule; only the material budget changes. Stiffness is relative to Balanced (higher is stiffer, from the optimizer's compliance). Overhang is the downward-facing area steeper than 45°, roughly what the slicer fills with supports.</p>
+  </section>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="grid2">
+    <section>
+      <h2>What to buy</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Qty</th><th>Part</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="n">2</td><td>JGB37-520 12 V gearmotor <b>with Hall encoder</b>, 1:90 (about 110 rpm)</td><td>The drive. Bolts to the face plate with six M3; the 6-pin encoder plug points inward into a cable space between the motors.</td></tr>
+          <tr><td class="n">2</td><td>100 mm rubber wheel with 6 mm hex coupling, treaded</td><td>Clamps onto the D-shaft. No bearings or axle needed. About 0.58 m/s at 12 V.</td></tr>
+          <tr><td class="n">1</td><td>2" (50 mm) rubber swivel caster with top plate, about 64 mm tall</td><td>The nose. The pad takes the two common hole patterns, 54 × 24 and 38 × 38 mm, with M4 inserts.</td></tr>
+          <tr><td class="n">1</td><td>Waveshare General Driver for Robots (ESP32)</td><td>Drives both motors and reads both encoders; IMU on board; USB to the Pi or PC. 65 × 65 mm, M3 at 58 × 49.</td></tr>
+          <tr><td class="n">2</td><td>32 × 32 mm USB (UVC) camera module, 720p–1080p, 30 fps</td><td>One on the wrist (official SO-101 mount), one on the mast. Wide-angle lens for the mast one.</td></tr>
+          <tr><td class="n">1</td><td>10 mm carbon or aluminium tube, 380 mm</td><td>The camera mast. Push into the socket, lock with an M3 grub screw.</td></tr>
+          <tr><td class="n">1</td><td>3S Li-ion / LiPo pack (11.1 V), up to 80 × 78 × 38 mm</td><td>Hangs low under the arm on two straps, keeping weight on the drive wheels.</td></tr>
+          <tr><td class="n">~25</td><td>M3 heat-set inserts + M3 × 6 / 10 screws</td><td>Collar joints, motor faces, driver standoffs.</td></tr>
+          <tr><td class="n">4+4</td><td>M5 inserts + M5 × 16 countersunk; M4 inserts + M4 × 8</td><td>SO-101 base (its own four holes); caster plate.</td></tr>
+          <tr><td class="n">opt.</td><td>Raspberry Pi 5 + 20 mm M2.5/M3 standoffs</td><td>Same 58 × 49 hole pattern as the driver, so it stacks on top.</td></tr>
+        </tbody>
+      </table></div>
+      <p class="note">No depth camera needed. LeRobot policies such as ACT learn well from two plain USB cameras: one on the wrist and one overhead. The wrist camera uses the official SO-101 mount (shown in orange): two M3 screws with hex nuts into the wrist roll part, and it looks at the jaw tips from about 12 cm. The mast puts the overview camera about 440 mm up, behind the arm, tilted 45° down onto the work area.</p>
+    </section>
+
+    <section>
+      <h2>Load cases the chassis was optimized for</h2>
+      <div class="loads">
+        <div class="load"><b>Arm weight</b><p>Straight down on the top pad.</p></div>
+        <div class="load"><b>Reach forward</b><p>Pitch moment: front of the pad pushed down, back pulled up.</p></div>
+        <div class="load"><b>Reach sideways</b><p>Roll moment across the pad, mirrored left and right.</p></div>
+        <div class="load"><b>Base rotation</b><p>Yaw twist when the shoulder servo accelerates.</p></div>
+        <div class="load"><b>Push and brake</b><p>Horizontal pad loads from driving and bumping.</p></div>
+        <div class="load"><b>Motor torque</b><p>Drive reaction twisting each motor face plate.</p></div>
+        <div class="load"><b>Reach backward</b><p>Reverse pitch, toward the mast.</p></div>
+        <div class="load"><b>Battery, boards, motors</b><p>Battery hanging from the straps, driver and Pi on the deck, motor weight on the rear cradles.</p></div>
+        <div class="load"><b>Caster plate</b><p>The caster's steel plate pushing up equally on every bolt boss, so each boss gets its own strut.</p></div>
+        <div class="load"><b>Camera mast</b><p>Sideways knock on the tall mast, a twisting couple on its socket.</p></div>
+      </div>
+      <p class="note" style="margin-top:12px">Supports: three points on the ground. Each wheel is a hinge on its shaft, and the caster bolt bosses hold vertical load. Only the bosses were fixed; the optimizer grew everything between them. Motors, encoder plugs, wheel wells, the caster swing circle and the battery bay were kept clear.</p>
+    </section>
+  </div>
+
+  <section>
+    <h2>FEA check of the finished frame</h2>
+    <p class="sub" id="fea-intro"></p>
+    <div class="tbl"><table>
+      <thead><tr><th>Load case</th><th>Peak stress</th><th>Safety factor</th><th>Max deflection</th><th>Error at gripper</th></tr></thead>
+      <tbody id="fea"></tbody>
+    </table></div>
+    <p class="note" style="margin-top:12px">The frame is far stronger than these loads need. Strength isn't the limit; printability is (members can't go much thinner than about 5 mm). Print with 2 walls and 10–15% infill. The knuckle joints are modeled as bonded. Infill lowers real stiffness by roughly half, which still leaves a large margin.</p>
+  </section>
+
+  <section>
+    <h2>Print list for the A1 mini</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Part</th><th>Qty</th><th>Size (mm)</th><th>Material</th><th>Est. g</th><th>Bed</th><th>How to print</th></tr></thead>
+      <tbody id="parts"></tbody>
+    </table></div>
+    <p class="sub">STL files are in <code>stl/&lt;variant&gt;/print/</code> (frame) and <code>stl/parts/</code> (camera head), centered and resting on the bed. Gram estimates assume about 55% fill.</p>
+  </section>
+
+  <div class="grid2">
+    <section>
+      <h2>Assembly</h2>
+      <ol>
+        <li>Print the rear and front bodies upright with tree supports; print the two motor pods with the face plate flat on the bed.</li>
+        <li>Press M3 heat-set inserts into the knuckle faces at the cuts (the smaller holes), M5 inserts into the arm pad, M4 inserts under the caster pad, M3 inserts in the driver bosses.</li>
+        <li>Slide each motor in through its pod until the gearbox face meets the plate; six M3 × 6 through the plate. Plug the encoder cable in first: there is a cable space between the two motors.</li>
+        <li>Bolt each pod and the front body to the rear body through the knuckles (M3 × 10; longer ones bottom out).</li>
+        <li>Wheels onto the shafts; tighten the coupling set screws on the D-flat. Caster on with four M4 × 8.</li>
+        <li>Strap the battery up into the bay under the arm. Driver board on 6 mm standoffs on the front deck; Pi on 20 mm standoffs above it if you use one.</li>
+        <li>SO-101 on the pad with four M5 countersunk screws from inside its base. Mast into the tail socket, camera head on top.</li>
+        <li>Wrist camera: remove the gripper servo (motor 6), drop two M3 hex nuts into the wrist roll part, refit the servo, then screw on the official mount and the camera (4 × M2). Set focus by twisting the lens.</li>
+      </ol>
+    </section>
+    <section>
+      <h2>Check before you print</h2>
+      <ul>
+        <li><b>Motor.</b> Six M3 on a 31 mm circle, shaft 7 mm off center. Gearbox length, can length, encoder board and plug position vary by seller: check <code>GEARBOX_L</code>, <code>CAN_L</code>, <code>ENC_L</code>, <code>PLUG_*</code> and <code>FACE_HOLE_ANGLE0</code> in <code>params.py</code>.</li>
+        <li><b>Wheel.</b> Set for 100 × 40 mm. For rougher ground a 130 mm off-road wheel fits after raising <code>WHEEL_D</code>; the frame regenerates.</li>
+        <li><b>Caster.</b> Set for a 64 mm tall 2" caster. A taller caster tilts the base back; change <code>CASTER_H</code> to match yours.</li>
+        <li><b>Arm mount.</b> The pad matches the official SO-101 follower base (base_so101_v2): four M5 holes.</li>
+        <li><b>Tipping.</b> With 3 kg total, the base stays stable with the arm fully out forward or sideways (200 g payload; about 26 mm margin sideways). Fully reaching <i>backward</i> past the axle with a load can tip it over the rear wheels, so keep the work area in front, where the camera looks anyway.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import { toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const PARTS = __PARTS_JSON__;
+const VARIANTS = __VARIANTS_JSON__;
+let current = VARIANTS.find(v => v.key === "print") ? "print" : VARIANTS[0].key;
+const STATS = __STATS_JSON__;
+
+document.getElementById("stats").innerHTML = STATS.map(s => `<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
+function renderParts() {
+  const v = VARIANTS.find(v => v.key === current);
+  const fea = v.fea;
+  document.getElementById("fea-intro").textContent = fea ? `${v.title} frame, voxelized at ${fea.voxel_mm} mm and solved as solid ${fea.material}. Wheels are hinges on their shafts; the caster bolt bosses stand on the floor. Worst safety factor ${fea.worst_safety_factor}×.` : "No FEA result for this variant yet.";
+  document.getElementById("fea").innerHTML = fea ? fea.cases.map(c => `<tr><td>${c.case}</td><td class="n">${c.stress_p995_mpa} MPa</td><td class="n">${c.safety_factor}×</td><td class="n">${c.max_disp_mm} mm</td><td class="n">${c.gripper_error_mm} mm</td></tr>`).join("") : "";
+  document.getElementById("parts").innerHTML = v.frame.concat(PARTS).map(p => `<tr><td>${p.name.replace(/_/g," ")}</td><td class="n">${p.qty}</td><td class="n">${p.size_mm.map(v=>Math.round(v)).join(" × ")}</td><td>${p.material}</td><td class="n">${Math.round(p.est_grams*p.qty)}</td><td>${p.fits_a1_mini?'<span class="pill ok">fits</span>':'<span class="pill warn">too big</span>'}</td><td>${p.note}</td></tr>`).join("");
+}
+const base = VARIANTS.find(v => v.key === "print" && !(v.pending || v.rejected)) || VARIANTS.find(v => !(v.pending || v.rejected));
+document.getElementById("variants").innerHTML = VARIANTS.map(v => (v.pending || v.rejected) ? `<button class="var" id="v-${v.key}" disabled aria-pressed="false" style="cursor:default;opacity:.65"><b>${v.title}</b><span class="why">${v.why}</span><span class="why" style="color:var(--warn)">${v.reason}</span></button>` : `<button class="var" id="v-${v.key}" aria-pressed="${v.key === current}">
+  <b>${v.title}</b><span class="why">${v.why}</span>
+  <dl><dt>frame</dt><dd>~${v.grams} g</dd><dt>stiffness</dt><dd>${v.compliance && base.compliance ? (base.compliance / v.compliance).toFixed(2) + "×" : "–"}</dd><dt>overhang</dt><dd>${v.overhang_cm2} cm²</dd></dl></button>`).join("");
+renderParts();
+
+const FRAMES = ["frame_rear","frame_front","frame_pod_left","frame_pod_right"];
+const MODELS = [
+  ["frame_rear","chassis",0xcfd3d6,[-0.5,0,0.5]], ["frame_front","chassis",0xcfd3d6,[1,0,0.5]],
+  ["frame_pod_left","chassis",0xcfd3d6,[0,0.9,0.3]], ["frame_pod_right","chassis",0xcfd3d6,[0,-0.9,0.3]],
+  ["_ref_gearbox","drive",0xe8661c,[0,0,-0.2]], ["_ref_motor","drive",0xb9bec2,[0,0,-0.2]],
+  ["_ref_encoder","drive",0x2f8f4e,[0,0,-0.2]], ["_ref_plug","drive",0xf4f4f0,[0,0,-0.2]],
+  ["_ref_tire","casters",0x24282b,[0,1.4,-0.2]], ["_ref_wheelhub","casters",0x3d4a52,[0,1.4,-0.2]],
+  ["_ref_caster_fork","casters",0x8a949a,[1.2,0,-0.8]], ["_ref_caster_wheel","casters",0x24282b,[1.2,0,-0.8]],
+  ["_ref_battery","proxy",0x7fa6c9,[0,0,-1.4]], ["_ref_driver","proxy",0x2f6fb0,[0.6,0,1.0]], ["_ref_pi5","proxy",0x3c9a5f,[0.6,0,1.4]],
+  ["_ref_mast","cam",0x2a2f33,[-1.0,0,1.0]], ["camera_head","cam",0xcfd3d6,[-1.0,0,1.3]], ["_ref_camera","cam",0x2a2f33,[-1.0,0,1.4]],
+  ["_arm_printed","arm",0xf2c14e,[0,0,1.6]], ["_arm_servos","arm",0x2a2f33,[0,0,1.6]],
+  ["_arm_wristmount","arm",0xe05a2a,[0,0,1.6]], ["_arm_wristcam","arm",0x2a2f33,[0,0,1.6]],
+];
+
+const canvas = document.getElementById("view");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 1, 5000);
+camera.up.set(0, 0, 1);
+camera.position.set(900, -1000, 700);
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(80, 0, 190); controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 0.8;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f94, 1.6));
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(300, -200, 600); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 0.9); rim.position.set(-400, 300, 200); scene.add(rim);
+const ground = new THREE.Mesh(new THREE.CircleGeometry(560, 64), new THREE.ShadowMaterial({ opacity: 0.12 }));
+scene.add(ground);
+const grid = new THREE.GridHelper(1000, 40, 0x8a949a, 0x8a949a); grid.rotation.x = Math.PI / 2; grid.material.transparent = true; grid.material.opacity = 0.18; scene.add(grid);
+
+const groups = { chassis: [], drive: [], casters: [], proxy: [], arm: [], cam: [] };
+const meshes = [];
+const RAMP = [[0.16,0.33,0.75],[0.15,0.62,0.72],[0.55,0.78,0.35],[0.98,0.78,0.2],[0.93,0.35,0.15]];
+function ramp(t) { t = Math.min(Math.max(t, 0), 1) * (RAMP.length - 1); const i = Math.min(Math.floor(t), RAMP.length - 2), f = t - i;
+  return RAMP[i].map((a, k) => a + (RAMP[i + 1][k] - a) * f); }
+const loader = { load(url, ok, _p, fail) {
+  const stressUrl = url.includes("/frame_") ? url.replace(".json", "_stress.json") : null;
+  Promise.all([fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+               stressUrl ? fetch(stressUrl).then(r => r.ok ? r.json() : null).catch(() => null) : null]).then(([d, st]) => {
+    const g = new THREE.BufferGeometry();
+    const pos = new Float32Array(d.v.length); for (let i = 0; i < d.v.length; i++) pos[i] = d.v[i] * d.s;
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setIndex(new THREE.BufferAttribute(new Uint32Array(d.i), 1));
+    if (st) { const col = new Float32Array(st.c.length * 3); st.c.forEach((v, k) => col.set(ramp(v), 3 * k)); g.setAttribute("color", new THREE.BufferAttribute(col, 3)); }
+    ok(toCreasedNormals(g, Math.PI / 5));
+  }).catch(fail);
+} };
+let loaded = 0;
+const path = name => FRAMES.includes(name) ? `web/${current}/assembly/${name}.json` : `web/assembly/${name}.json`;
+function loadModel([name, group, color, dir], onDone) {
+  loader.load(path(name), geo => {
+    const proxy = group === "proxy";
+        const mat = new THREE.MeshStandardMaterial({ color, metalness: proxy ? 0 : 0.15, roughness: proxy ? 0.8 : 0.55,
+      transparent: proxy, opacity: proxy ? 0.45 : 1, flatShading: false });
+    if (group === "chassis" && geo.getAttribute("color")) { mat.vertexColors = stressOn; if (stressOn) mat.color.set(0xffffff); m_color(mat, color); }
+    const m = new THREE.Mesh(geo, mat); m.userData.dir = new THREE.Vector3(...dir); m.userData.name = name;
+    m.visible = document.getElementById({chassis:"t-chassis",drive:"t-drive",casters:"t-casters",proxy:"t-proxy",arm:"t-arm",cam:"t-cam"}[group]).getAttribute("aria-pressed") === "true";
+    scene.add(m); groups[group].push(m); meshes.push(m);
+    applyExplode(); if (onDone) onDone();
+  }, undefined, () => { document.getElementById("loading").hidden = false; document.getElementById("loading").textContent = `Could not load ${name}`; });
+}
+MODELS.forEach(spec => loadModel(spec, () => {
+  if (++loaded === MODELS.length) document.getElementById("loading").hidden = true;
+  else document.getElementById("loading").textContent = `Loading parts… ${loaded}/${MODELS.length}`;
+}));
+VARIANTS.filter(v => !(v.pending || v.rejected)).forEach(v => document.getElementById(`v-${v.key}`).addEventListener("click", () => {
+  if (v.key === current) return;
+  current = v.key;
+  VARIANTS.filter(w => !(w.pending || w.rejected)).forEach(w => document.getElementById(`v-${w.key}`).setAttribute("aria-pressed", w.key === current));
+  for (const m of meshes.filter(m => FRAMES.includes(m.userData.name))) {
+    scene.remove(m); m.geometry.dispose();
+    groups.chassis.splice(groups.chassis.indexOf(m), 1); meshes.splice(meshes.indexOf(m), 1);
+  }
+  MODELS.filter(sp => FRAMES.includes(sp[0])).forEach(sp => loadModel(sp));
+  renderParts();
+}));
+
+let stressOn = false;
+function m_color(mat, base) { mat.userData.base = base; }
+document.getElementById("t-stress").addEventListener("click", e => {
+  stressOn = !stressOn; e.currentTarget.setAttribute("aria-pressed", stressOn);
+  document.getElementById("stresslegend").hidden = !stressOn;
+  groups.chassis.forEach(m => { if (!m.geometry.getAttribute("color")) return;
+    m.material.vertexColors = stressOn; m.material.color.set(stressOn ? 0xffffff : m.material.userData.base); m.material.needsUpdate = true; });
+});
+const ex = document.getElementById("explode");
+function applyExplode() { const k = +ex.value * 90; meshes.forEach(m => m.position.copy(m.userData.dir).multiplyScalar(k)); }
+ex.addEventListener("input", applyExplode);
+[["t-chassis","chassis"],["t-drive","drive"],["t-casters","casters"],["t-proxy","proxy"],["t-arm","arm"],["t-cam","cam"]].forEach(([id, g]) => {
+  const b = document.getElementById(id);
+  b.addEventListener("click", () => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); groups[g].forEach(m => m.visible = on); });
+});
+const spin = document.getElementById("spin");
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) { controls.autoRotate = false; spin.setAttribute("aria-pressed", "false"); }
+spin.addEventListener("click", () => { controls.autoRotate = !controls.autoRotate; spin.setAttribute("aria-pressed", controls.autoRotate); });
+
+function resize() { const r = canvas.parentElement.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(canvas.parentElement); resize();
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>

@@ -1,0 +1,30 @@
+[
+ {
+  "name": "so101_wrist_camera_mount (official)",
+  "qty": 1,
+  "material": "PETG (or PLA+)",
+  "size_mm": [
+   66.1,
+   42.6,
+   35.0
+  ],
+  "fits_a1_mini": true,
+  "volume_cm3": 10.8,
+  "est_grams": 11,
+  "note": "TheRobotStudio SO101_Wrist_Cam_Hex-Nut_Mount_32x32_UVC_Module. Two M3 x 8 + hex nuts into the wrist roll part; camera on 4 x M2."
+ },
+ {
+  "name": "camera_head",
+  "qty": 1,
+  "material": "PETG (or PLA+)",
+  "size_mm": [
+   67.6,
+   40.0,
+   37.6
+  ],
+  "fits_a1_mini": true,
+  "volume_cm3": 17.4,
+  "est_grams": 18,
+  "note": "Clamps on the 10 mm mast with one M3 pinch screw. Camera on a 1/4\"-20 screw or 4 x M2 (32 x 32 USB board). Tree supports."
+ }
+]

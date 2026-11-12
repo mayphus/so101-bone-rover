@@ -1,0 +1,70 @@
+[
+ {
+  "name": "frame_rear",
+  "qty": 1,
+  "material": "PETG (or PLA+)",
+  "size_mm": [
+   173.0,
+   159.8,
+   89.0
+  ],
+  "fits_a1_mini": true,
+  "volume_cm3": 514.3,
+  "est_grams": 359,
+  "note": "Upright as on the robot. Tree supports (auto). M5 inserts in the arm pad, M3 inserts in the knuckle faces.",
+  "watertight": true,
+  "bodies": 1,
+  "overhang_cm2": 132.1
+ },
+ {
+  "name": "frame_front",
+  "qty": 1,
+  "material": "PETG (or PLA+)",
+  "size_mm": [
+   75.0,
+   142.7,
+   124.4
+  ],
+  "fits_a1_mini": true,
+  "volume_cm3": 171.5,
+  "est_grams": 120,
+  "note": "Stand it on its flat cut face. Tree supports (auto). M4 inserts in the caster bosses, M3 inserts for the driver.",
+  "watertight": true,
+  "bodies": 1,
+  "overhang_cm2": 23.7
+ },
+ {
+  "name": "frame_pod_left",
+  "qty": 1,
+  "material": "PETG (or PLA+)",
+  "size_mm": [
+   84.2,
+   73.8,
+   16.5
+  ],
+  "fits_a1_mini": true,
+  "volume_cm3": 60.9,
+  "est_grams": 43,
+  "note": "Lay the motor face plate flat on the bed. M3 inserts in the knuckle faces.",
+  "watertight": true,
+  "bodies": 1,
+  "overhang_cm2": 10.6
+ },
+ {
+  "name": "frame_pod_right",
+  "qty": 1,
+  "material": "PETG (or PLA+)",
+  "size_mm": [
+   84.2,
+   73.8,
+   16.5
+  ],
+  "fits_a1_mini": true,
+  "volume_cm3": 60.9,
+  "est_grams": 43,
+  "note": "Mirror of the left pod. Lay the face plate flat on the bed.",
+  "watertight": true,
+  "bodies": 1,
+  "overhang_cm2": 10.6
+ }
+]

@@ -1,0 +1,60 @@
+{
+ "variant": "print",
+ "voxel_mm": 2.5,
+ "material": "PETG E=2000 MPa, allowable 25 MPa",
+ "cases": [
+  {
+   "case": "Arm reaching forward, 200 g payload, 2x dynamic",
+   "max_disp_mm": 0.036,
+   "pad_tilt_deg": 0.019,
+   "gripper_error_mm": 0.13,
+   "stress_p995_mpa": 0.28,
+   "stress_max_mpa": 1.31,
+   "safety_factor": 88.6,
+   "cg_info": 0
+  },
+  {
+   "case": "Arm reaching sideways, 200 g payload, 2x dynamic",
+   "max_disp_mm": 0.027,
+   "pad_tilt_deg": 0.021,
+   "gripper_error_mm": 0.15,
+   "stress_p995_mpa": 0.25,
+   "stress_max_mpa": 1.37,
+   "safety_factor": 99.0,
+   "cg_info": 0
+  },
+  {
+   "case": "3 g bump: arm, battery, motors, boards, mast",
+   "max_disp_mm": 0.032,
+   "pad_tilt_deg": 0.001,
+   "gripper_error_mm": 0.01,
+   "stress_p995_mpa": 0.24,
+   "stress_max_mpa": 1.13,
+   "safety_factor": 106.0,
+   "cg_info": 0
+  },
+  {
+   "case": "Both motors at stall torque",
+   "max_disp_mm": 0.015,
+   "pad_tilt_deg": 0.003,
+   "gripper_error_mm": 0.02,
+   "stress_p995_mpa": 0.18,
+   "stress_max_mpa": 0.41,
+   "safety_factor": 136.9,
+   "cg_info": 0
+  },
+  {
+   "case": "Camera mast knocked sideways, 3 g",
+   "max_disp_mm": 0.077,
+   "pad_tilt_deg": 0.008,
+   "gripper_error_mm": 0.06,
+   "stress_p995_mpa": 0.62,
+   "stress_max_mpa": 1.72,
+   "safety_factor": 40.5,
+   "cg_info": 0
+  }
+ ],
+ "worst_safety_factor": 40.5,
+ "worst_gripper_error_mm": 0.15,
+ "stress_view_scale_mpa": 0.639
+}

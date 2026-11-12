@@ -1,0 +1,43 @@
+{
+ "variant": "stiff",
+ "compliance": 341.5846517708013,
+ "grams": 565,
+ "volume_cm3": 807.6,
+ "overhang_cm2": 177.0,
+ "fits": true,
+ "bodies": [
+  1,
+  1,
+  1,
+  1
+ ],
+ "islands": 1,
+ "joints": [
+  {
+   "plane": "x=+104",
+   "section_mm2": 930,
+   "screws": 2
+  },
+  {
+   "plane": "x=+104",
+   "section_mm2": 930,
+   "screws": 2
+  },
+  {
+   "plane": "x=+104",
+   "section_mm2": 1989,
+   "screws": 5
+  },
+  {
+   "plane": "y=+80",
+   "section_mm2": 4035,
+   "screws": 6
+  },
+  {
+   "plane": "y=-80",
+   "section_mm2": 4031,
+   "screws": 6
+  }
+ ],
+ "screws": 21
+}

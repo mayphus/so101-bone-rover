@@ -1,0 +1,43 @@
+{
+ "variant": "print",
+ "compliance": 390.82085605781737,
+ "grams": 441,
+ "volume_cm3": 632.7,
+ "overhang_cm2": 186.6,
+ "fits": true,
+ "bodies": [
+  1,
+  1,
+  1,
+  1
+ ],
+ "islands": 1,
+ "joints": [
+  {
+   "plane": "x=+104",
+   "section_mm2": 756,
+   "screws": 2
+  },
+  {
+   "plane": "x=+104",
+   "section_mm2": 756,
+   "screws": 2
+  },
+  {
+   "plane": "x=+104",
+   "section_mm2": 1776,
+   "screws": 2
+  },
+  {
+   "plane": "y=+80",
+   "section_mm2": 3570,
+   "screws": 6
+  },
+  {
+   "plane": "y=-80",
+   "section_mm2": 3566,
+   "screws": 6
+  }
+ ],
+ "screws": 18
+}

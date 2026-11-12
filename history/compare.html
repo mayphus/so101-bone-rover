@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#1a2026}canvas{display:block;width:100vw;height:100vh}</style>
+<canvas id="c"></canvas>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import { toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
+const r = new THREE.WebGLRenderer({canvas: c, antialias: true}); r.setSize(innerWidth, innerHeight);
+const s = new THREE.Scene(); const cam = new THREE.PerspectiveCamera(30, innerWidth/innerHeight, 1, 5000);
+cam.up.set(0,0,1); cam.position.set(140,-520,260); cam.lookAt(140,0,60);
+s.add(new THREE.HemisphereLight(0xffffff, 0x666666, 1.5)); const d = new THREE.DirectionalLight(0xffffff, 2.5); d.position.set(300,-300,500); s.add(d);
+for (const [v, dx] of [["smooth0", 0], ["smooth1", 280]]) {
+  const j = await (await fetch(`web/${v}/assembly/frame_middle.json`)).json();
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(Float32Array.from(j.v, x => x*j.s), 3));
+  g.setIndex(new THREE.BufferAttribute(new Uint32Array(j.i), 1)); const gg = toCreasedNormals(g, Math.PI / 5);
+  const m = new THREE.Mesh(gg, new THREE.MeshStandardMaterial({color: 0xd0d4d7, roughness: .5, metalness: .1})); m.position.x = dx; s.add(m);
+}
+r.setAnimationLoop(() => r.render(s, cam));
+</script>
